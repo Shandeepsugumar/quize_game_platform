@@ -217,6 +217,38 @@ router.get('/me', authMiddleware, async (req, res) => {
     }
 });
 
+// Update Profile
+router.put('/update-profile', authMiddleware, async (req, res) => {
+    try {
+        const { username, avatar } = req.body;
+
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (avatar) updateData.avatar = avatar;
+
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            updateData,
+            { new: true }
+        ).select('-password');
+
+        res.json({
+            message: 'Profile updated successfully',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                avatar: user.avatar,
+                totalScore: user.totalScore,
+                gamesPlayed: user.gamesPlayed
+            }
+        });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ message: 'Server error updating profile' });
+    }
+});
+
 // Logout
 router.post('/logout', (req, res) => {
     res.clearCookie('token');

@@ -15,10 +15,14 @@ const Results = () => {
 
     const loadResults = async () => {
         try {
+            console.log('Loading results for room:', roomCode);
             const response = await gameAPI.getResults(roomCode);
+            console.log('Results loaded:', response.data);
             setResults(response.data);
         } catch (error) {
             console.error('Error loading results:', error);
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
         } finally {
             setLoading(false);
         }
@@ -47,136 +51,119 @@ const Results = () => {
         );
     }
 
-    const topFive = results.rankings.slice(0, 5);
-
     return (
         <div className="results-container">
-            <div className="container">
-                <div className="results-header fade-in">
-                    <h1>🎉 Game Results</h1>
-                    <div className="quiz-title">{results.room.quiz.title}</div>
-                    <div className="room-code-badge">{results.room.roomCode}</div>
+            <div className="podium-wrapper">
+                <div className="podium-header fade-in">
+                    <h1 className="podium-title">Podium!</h1>
+                    <div className="quiz-subtitle">{results.room.quiz.title}</div>
                 </div>
 
-                {results.rankings.length >= 3 && (
-                    <div className="podium-container fade-in">
-                        <div className="podium">
-                            <div className="podium-place second-place">
-                                <div className="winner-card">
-                                    <div className="medal">🥈</div>
-                                    <img
-                                        src={results.rankings[1].user.avatar}
-                                        alt=""
-                                        className="winner-avatar"
-                                    />
-                                    <h3>{results.rankings[1].user.username}</h3>
-                                    <div className="winner-score">{results.rankings[1].score}</div>
-                                    <div className="winner-stats">
-                                        <span>{results.rankings[1].correctAnswers}/{results.rankings[1].totalQuestions}</span>
-                                        <span>{results.rankings[1].accuracy.toFixed(1)}%</span>
+                {results.rankings.length >= 1 && (
+                    <div className="podium-stage fade-in">
+                        {/* Second Place - Left */}
+                        <div className="podium-position second-position">
+                            {results.rankings[1] ? (
+                                <>
+                                    <div className="player-info">
+                                        <img
+                                            src={results.rankings[1].user.avatar}
+                                            alt={results.rankings[1].user.username}
+                                            className="player-avatar"
+                                        />
+                                        <div className="player-name">{results.rankings[1].user.username}</div>
                                     </div>
-                                </div>
-                                <div className="podium-stand second">
-                                    <span className="rank-number">2</span>
-                                </div>
-                            </div>
+                                    <div className="podium-block second-block">
+                                        <div className="medal-circle silver-medal">
+                                            <span className="medal-number">2</span>
+                                        </div>
+                                        <div className="score-display">{results.rankings[1].score}</div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="player-info">
+                                        <div className="empty-avatar"></div>
+                                        <div className="player-name empty-name">---</div>
+                                    </div>
+                                    <div className="podium-block second-block empty-block">
+                                        <div className="medal-circle silver-medal empty-medal">
+                                            <span className="medal-number">2</span>
+                                        </div>
+                                        <div className="score-display">---</div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
-                            <div className="podium-place first-place">
-                                <div className="winner-card champion">
-                                    <div className="crown">👑</div>
-                                    <div className="medal">🥇</div>
-                                    <img
-                                        src={results.rankings[0].user.avatar}
-                                        alt=""
-                                        className="winner-avatar"
-                                    />
-                                    <h3>{results.rankings[0].user.username}</h3>
-                                    <div className="winner-score">{results.rankings[0].score}</div>
-                                    <div className="winner-stats">
-                                        <span>{results.rankings[0].correctAnswers}/{results.rankings[0].totalQuestions}</span>
-                                        <span>{results.rankings[0].accuracy.toFixed(1)}%</span>
-                                    </div>
-                                </div>
-                                <div className="podium-stand first">
-                                    <span className="rank-number">1</span>
-                                </div>
+                        {/* First Place - Center */}
+                        <div className="podium-position first-position">
+                            <div className="player-info winner-info">
+                                <div className="crown-icon">👑</div>
+                                <img
+                                    src={results.rankings[0].user.avatar}
+                                    alt={results.rankings[0].user.username}
+                                    className="player-avatar winner-avatar"
+                                />
+                                <div className="player-name winner-name">{results.rankings[0].user.username}</div>
                             </div>
+                            <div className="podium-block first-block">
+                                <div className="medal-circle gold-medal">
+                                    <span className="medal-number">1</span>
+                                </div>
+                                <div className="score-display winner-score">{results.rankings[0].score}</div>
+                            </div>
+                        </div>
 
-                            <div className="podium-place third-place">
-                                <div className="winner-card">
-                                    <div className="medal">🥉</div>
-                                    <img
-                                        src={results.rankings[2].user.avatar}
-                                        alt=""
-                                        className="winner-avatar"
-                                    />
-                                    <h3>{results.rankings[2].user.username}</h3>
-                                    <div className="winner-score">{results.rankings[2].score}</div>
-                                    <div className="winner-stats">
-                                        <span>{results.rankings[2].correctAnswers}/{results.rankings[2].totalQuestions}</span>
-                                        <span>{results.rankings[2].accuracy.toFixed(1)}%</span>
+                        {/* Third Place - Right */}
+                        <div className="podium-position third-position">
+                            {results.rankings[2] ? (
+                                <>
+                                    <div className="player-info">
+                                        <img
+                                            src={results.rankings[2].user.avatar}
+                                            alt={results.rankings[2].user.username}
+                                            className="player-avatar"
+                                        />
+                                        <div className="player-name">{results.rankings[2].user.username}</div>
                                     </div>
-                                </div>
-                                <div className="podium-stand third">
-                                    <span className="rank-number">3</span>
-                                </div>
-                            </div>
+                                    <div className="podium-block third-block">
+                                        <div className="medal-circle bronze-medal">
+                                            <span className="medal-number">3</span>
+                                        </div>
+                                        <div className="score-display">{results.rankings[2].score}</div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="player-info">
+                                        <div className="empty-avatar"></div>
+                                        <div className="player-name empty-name">---</div>
+                                    </div>
+                                    <div className="podium-block third-block empty-block">
+                                        <div className="medal-circle bronze-medal empty-medal">
+                                            <span className="medal-number">3</span>
+                                        </div>
+                                        <div className="score-display">---</div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
 
-                <div className="rankings-section fade-in">
-                    <h2>🏆 Top 5 Players</h2>
-                    <div className="rankings-list">
-                        {topFive.map((player, index) => (
-                            <div
-                                key={player.user._id}
-                                className={`ranking-item ${index === 0 ? 'rank-1' :
-                                        index === 1 ? 'rank-2' :
-                                            index === 2 ? 'rank-3' : ''
-                                    }`}
-                            >
-                                <div className="rank-position">
-                                    {index === 0 ? '🥇' :
-                                        index === 1 ? '🥈' :
-                                            index === 2 ? '🥉' :
-                                                `#${player.rank}`}
-                                </div>
-                                <img
-                                    src={player.user.avatar}
-                                    alt=""
-                                    className="ranking-avatar"
-                                />
-                                <div className="ranking-info">
-                                    <h4>{player.user.username}</h4>
-                                    <div className="ranking-details">
-                                        <span className="detail-item">
-                                            ✓ {player.correctAnswers}/{player.totalQuestions} correct
-                                        </span>
-                                        <span className="detail-item">
-                                            📊 {player.accuracy.toFixed(1)}% accuracy
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="ranking-score">
-                                    <span className="score-value">{player.score}</span>
-                                    <span className="score-label">points</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {results.rankings.length > 5 && (
-                    <div className="all-players-section fade-in">
-                        <h3>All Players</h3>
-                        <div className="simple-rankings">
-                            {results.rankings.slice(5).map((player) => (
-                                <div key={player.user._id} className="simple-ranking-item">
-                                    <span className="simple-rank">#{player.rank}</span>
-                                    <img src={player.user.avatar} alt="" className="simple-avatar" />
-                                    <span className="simple-name">{player.user.username}</span>
-                                    <span className="simple-score">{player.score} pts</span>
+                {/* Additional Rankings */}
+                {results.rankings.length > 3 && (
+                    <div className="additional-rankings fade-in">
+                        <h3 className="rankings-title">Other Players</h3>
+                        <div className="rankings-list">
+                            {results.rankings.slice(3).map((player, index) => (
+                                <div key={player.user._id} className="ranking-row">
+                                    <span className="rank-badge">#{index + 4}</span>
+                                    <img src={player.user.avatar} alt="" className="rank-avatar" />
+                                    <span className="rank-name">{player.user.username}</span>
+                                    <span className="rank-score">{player.score} pts</span>
+                                    <span className="rank-accuracy">{player.accuracy.toFixed(1)}%</span>
                                 </div>
                             ))}
                         </div>

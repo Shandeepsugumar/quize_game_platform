@@ -51,12 +51,12 @@ const Dashboard = () => {
             const response = await roomAPI.createRoom({
                 name: `${user.username}'s Room`,
                 quizId,
-                maxPlayers: 100
+                maxPlayers: 50
             });
             navigate(`/room/${response.data.room.roomCode}`);
         } catch (error) {
             console.error('Error creating room:', error);
-            alert('Failed to create room');
+            alert('Failed to create room. Please try again.');
         }
     };
 

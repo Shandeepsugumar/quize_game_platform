@@ -163,17 +163,23 @@ router.post('/complete', authMiddleware, async (req, res) => {
 // Get Game Results
 router.get('/results/:roomCode', authMiddleware, async (req, res) => {
     try {
+        console.log('📊 Fetching results for room:', req.params.roomCode);
+
         const room = await Room.findOne({ roomCode: req.params.roomCode.toUpperCase() })
-            .populate('quiz players.user', 'title username avatar');
+            .populate('quiz')
+            .populate('players.user', 'username avatar');
 
         if (!room) {
+            console.log('❌ Room not found:', req.params.roomCode);
             return res.status(404).json({ message: 'Room not found' });
         }
+
+        console.log('✅ Room found:', room.roomCode, 'Players:', room.players.length);
 
         const rankings = room.players
             .map(player => {
                 const correctAnswers = player.answers.filter(a => a.isCorrect).length;
-                const totalQuestions = room.quiz.questions.length;
+                const totalQuestions = room.quiz.questions ? room.quiz.questions.length : 0;
                 const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
                 return {
@@ -191,13 +197,19 @@ router.get('/results/:roomCode', authMiddleware, async (req, res) => {
                 rank: index + 1
             }));
 
+        console.log('✅ Rankings calculated:', rankings.length, 'players');
+
         res.json({
             room,
             rankings
         });
     } catch (error) {
-        console.error('Get results error:', error);
-        res.status(500).json({ message: 'Server error fetching results' });
+        console.error('❌ Get results error:', error);
+        console.error('Error stack:', error.stack);
+        res.status(500).json({
+            message: 'Server error fetching results',
+            error: error.message
+        });
     }
 });
 

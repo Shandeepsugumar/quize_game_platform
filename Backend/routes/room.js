@@ -44,7 +44,25 @@ router.post('/create', authMiddleware, async (req, res) => {
         });
     } catch (error) {
         console.error('Create room error:', error);
-        res.status(500).json({ message: 'Server error creating room' });
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+
+        // Handle validation errors specifically
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({
+                message: 'Validation failed',
+                errors: validationErrors
+            });
+        }
+
+        res.status(500).json({
+            message: 'Server error creating room',
+            error: error.message
+        });
     }
 });
 
@@ -111,6 +129,39 @@ router.get('/:roomCode', authMiddleware, async (req, res) => {
     } catch (error) {
         console.error('Get room error:', error);
         res.status(500).json({ message: 'Server error fetching room' });
+    }
+});
+
+// Toggle Power-Ups
+router.post('/:roomCode/toggle-powerups', authMiddleware, async (req, res) => {
+    try {
+        const { powerUpsEnabled } = req.body;
+
+        const room = await Room.findOne({ roomCode: req.params.roomCode.toUpperCase() })
+            .populate('quiz host players.user', 'title username avatar');
+
+        if (!room) {
+            return res.status(404).json({ message: 'Room not found' });
+        }
+
+        if (room.host._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Only the host can toggle power-ups' });
+        }
+
+        if (room.status !== 'waiting') {
+            return res.status(400).json({ message: 'Cannot change power-ups after game has started' });
+        }
+
+        room.powerUpsEnabled = powerUpsEnabled;
+        await room.save();
+
+        res.json({
+            message: `Power-ups ${powerUpsEnabled ? 'enabled' : 'disabled'}`,
+            room
+        });
+    } catch (error) {
+        console.error('Toggle power-ups error:', error);
+        res.status(500).json({ message: 'Server error toggling power-ups' });
     }
 });
 

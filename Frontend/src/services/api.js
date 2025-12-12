@@ -48,6 +48,7 @@ export const roomAPI = {
     joinRoom: (data) => api.post('/room/join', data),
     getRoom: (roomCode) => api.get(`/room/${roomCode}`),
     startGame: (roomCode) => api.post(`/room/${roomCode}/start`),
+    togglePowerUps: (roomCode, powerUpsEnabled) => api.post(`/room/${roomCode}/toggle-powerups`, { powerUpsEnabled }),
     getActiveRooms: () => api.get('/room/active/all')
 };
 

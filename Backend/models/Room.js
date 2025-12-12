@@ -35,8 +35,14 @@ const roomSchema = new mongoose.Schema({
             selectedAnswer: Number,
             isCorrect: Boolean,
             points: Number,
-            timeSpent: Number
+            timeSpent: Number,
+            powerUpUsed: String // 'double-points', 'freeze-time', 'skip-question'
         }],
+        powerUps: {
+            doublePoints: { type: Number, default: 2 },
+            freezeTime: { type: Number, default: 2 },
+            skipQuestion: { type: Number, default: 1 }
+        },
         joinedAt: {
             type: Date,
             default: Date.now
@@ -52,6 +58,10 @@ const roomSchema = new mongoose.Schema({
         type: String,
         enum: ['waiting', 'in-progress', 'completed'],
         default: 'waiting'
+    },
+    powerUpsEnabled: {
+        type: Boolean,
+        default: false
     },
     currentQuestion: {
         type: Number,
