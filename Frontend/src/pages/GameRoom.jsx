@@ -104,7 +104,7 @@ const GameRoom = () => {
 
         try {
             // Update user profile with new name and avatar
-            await fetch('http://localhost:3000/api/auth/update-profile', {
+            await fetch('https://quize-game-platform.onrender.com/api/auth/update-profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ const GameRoom = () => {
 
         try {
             // Update host profile
-            await fetch('http://localhost:3000/api/auth/update-profile', {
+            await fetch('https://quize-game-platform.onrender.com/api/auth/update-profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
