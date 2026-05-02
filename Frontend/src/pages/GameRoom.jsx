@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { roomAPI, gameAPI } from '../services/api';
+import { roomAPI, gameAPI, authAPI } from '../services/api';
 import './GameRoom.css';
 
 const GameRoom = () => {
@@ -40,6 +40,8 @@ const GameRoom = () => {
     });
     const [timeFrozen, setTimeFrozen] = useState(false);
 
+    const getId = (item) => item?._id ?? item?.id;
+
     // Avatar options
     const avatarOptions = [
         'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
@@ -62,7 +64,7 @@ const GameRoom = () => {
 
     // Check if host should see mode selection
     useEffect(() => {
-        if (room && room.host._id === user?.id && room.status === 'waiting' && !hostMode) {
+        if (room && getId(room.host) === user?.id && room.status === 'waiting' && !hostMode) {
             setShowHostModeSelection(true);
         }
     }, [room, user]);
@@ -104,16 +106,9 @@ const GameRoom = () => {
 
         try {
             // Update user profile with new name and avatar
-            await fetch('https://quize-game-platform.onrender.com/api/auth/update-profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    username: displayName,
-                    avatar: selectedAvatar
-                })
+            await authAPI.updateProfile({
+                username: displayName,
+                avatar: selectedAvatar
             });
 
             // Join the room
@@ -148,16 +143,9 @@ const GameRoom = () => {
 
         try {
             // Update host profile
-            await fetch('https://quize-game-platform.onrender.com/api/auth/update-profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    username: displayName,
-                    avatar: selectedAvatar
-                })
+            await authAPI.updateProfile({
+                username: displayName,
+                avatar: selectedAvatar
             });
 
             setShowPlayerSetup(false);
@@ -249,7 +237,7 @@ const GameRoom = () => {
             setTimeLeft(room.quiz.questions[currentQuestionIndex + 1].timeLimit);
         } else {
             // Last question, complete game
-            if (room.host._id === user.id) {
+            if (getId(room.host) === user.id) {
                 completeGame();
             } else {
                 navigate(`/results/${roomCode}`);
@@ -292,7 +280,7 @@ const GameRoom = () => {
                     setActivePowerUp(null);
                     setTimeLeft(room.quiz.questions[currentQuestionIndex + 1].timeLimit);
                 } else {
-                    if (room.host._id === user.id) {
+                    if (getId(room.host) === user.id) {
                         completeGame();
                     } else {
                         navigate(`/results/${roomCode}`);
@@ -336,8 +324,8 @@ const GameRoom = () => {
         );
     }
 
-    const isHost = room?.host._id === user?.id;
-    const isPlayerInRoom = room?.players.some(p => p.user._id === user?.id);
+    const isHost = getId(room?.host) === user?.id;
+    const isPlayerInRoom = room?.players.some(p => getId(p.user) === user?.id);
 
     return (
         <div className="game-room-container">
@@ -450,11 +438,11 @@ const GameRoom = () => {
                             <h2>Players ({room.players.length}/{room.maxPlayers})</h2>
                             <div className="players-grid">
                                 {room.players.map((player) => (
-                                    <div key={player.user._id} className="player-card">
+                                    <div key={getId(player.user)} className="player-card">
                                         <img src={player.user.avatar} alt="" className="player-avatar" />
                                         <div className="player-info">
                                             <p className="player-name">{player.user.username}</p>
-                                            {player.user._id === room.host._id && (
+                                            {getId(player.user) === getId(room.host) && (
                                                 <span className="host-badge">Host</span>
                                             )}
                                         </div>
@@ -588,7 +576,7 @@ const GameRoom = () => {
                                                 const answeredCorrectly = currentAnswer?.isCorrect;
 
                                                 return (
-                                                    <div key={player.user._id} className={`leaderboard-item rank-${index + 1}`}>
+                                                    <div key={getId(player.user)} className={`leaderboard-item rank-${index + 1}`}>
                                                         <div className="player-rank">#{index + 1}</div>
                                                         <img src={player.user.avatar} alt="" className="player-avatar-small" />
                                                         <div className="player-details">
@@ -719,8 +707,8 @@ const GameRoom = () => {
 
                                                         return (
                                                             <div
-                                                                key={player.user._id}
-                                                                className={`leaderboard-item rank-${index + 1} ${player.user._id === user?.id ? 'current-user' : ''}`}
+                                                                key={getId(player.user)}
+                                                                className={`leaderboard-item rank-${index + 1} ${getId(player.user) === user?.id ? 'current-user' : ''}`}
                                                             >
                                                                 <div className="player-rank">#{index + 1}</div>
                                                                 <img src={player.user.avatar} alt="" className="player-avatar-small" />
@@ -728,7 +716,7 @@ const GameRoom = () => {
                                                                     <div className="player-name-score">
                                                                         <span className="player-name">
                                                                             {player.user.username}
-                                                                            {player.user._id === user?.id && <span className="you-badge">You</span>}
+                                                                            {getId(player.user) === user?.id && <span className="you-badge">You</span>}
                                                                         </span>
                                                                         {index === 0 && <span className="leader-badge">👑</span>}
                                                                     </div>

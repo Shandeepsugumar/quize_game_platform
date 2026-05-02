@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AvatarPicker, { AvatarPickerTrigger } from '../components/AvatarPicker';
+import { getDefaultAvatar } from '../components/avatarData';
 import './Auth.css';
 
 const Register = () => {
     const navigate = useNavigate();
     const { register } = useAuth();
+    const defaultAvatar = getDefaultAvatar();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        avatarUrl: defaultAvatar.url,
+        avatarName: defaultAvatar.name,
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -21,6 +27,14 @@ const Register = () => {
             [e.target.name]: e.target.value
         });
         setError('');
+    };
+
+    const handleAvatarSelect = (avatar) => {
+        setFormData((current) => ({
+            ...current,
+            avatarUrl: avatar.url,
+            avatarName: avatar.name,
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -43,7 +57,8 @@ const Register = () => {
         const result = await register({
             username: formData.username,
             email: formData.email,
-            password: formData.password
+            password: formData.password,
+            avatar: formData.avatarUrl,
         });
 
         if (result.success) {
@@ -70,6 +85,16 @@ const Register = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="auth-form">
+                    {/* ─── Avatar Selection ─── */}
+                    <div className="form-group">
+                        <label className="form-label">Choose Your Avatar</label>
+                        <AvatarPickerTrigger
+                            avatarUrl={formData.avatarUrl}
+                            name={formData.avatarName}
+                            onClick={() => setShowAvatarPicker(true)}
+                        />
+                    </div>
+
                     <div className="form-group">
                         <label className="form-label">Username</label>
                         <input
@@ -142,6 +167,14 @@ const Register = () => {
                     </p>
                 </div>
             </div>
+
+            {/* Avatar Picker Modal */}
+            <AvatarPicker
+                isOpen={showAvatarPicker}
+                onClose={() => setShowAvatarPicker(false)}
+                onSelect={handleAvatarSelect}
+                currentUrl={formData.avatarUrl}
+            />
         </div>
     );
 };

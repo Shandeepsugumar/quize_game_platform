@@ -19,6 +19,8 @@ const Dashboard = () => {
         search: ''
     });
 
+    const getId = (item) => item?._id ?? item?.id;
+
     useEffect(() => {
         loadData();
     }, [activeTab, filters]);
@@ -69,6 +71,10 @@ const Dashboard = () => {
         navigate('/login');
     };
 
+    const handleProfile = () => {
+        navigate('/profile');
+    };
+
     return (
         <div className="dashboard">
             <header className="dashboard-header">
@@ -85,6 +91,9 @@ const Dashboard = () => {
                                     <p className="user-score">Score: {user?.totalScore || 0}</p>
                                 </div>
                             </div>
+                            <button onClick={handleProfile} className="btn btn-secondary">
+                                Profile
+                            </button>
                             <button onClick={handleLogout} className="btn btn-outline">
                                 Logout
                             </button>
@@ -176,7 +185,7 @@ const Dashboard = () => {
                             ) : (
                                 <div className="quiz-grid">
                                     {quizzes.map((quiz) => (
-                                        <div key={quiz._id} className="quiz-card card">
+                                        <div key={getId(quiz)} className="quiz-card card">
                                             <div className="quiz-header">
                                                 <h3>{quiz.title}</h3>
                                                 <span className={`badge badge-${quiz.difficulty.toLowerCase()}`}>
@@ -202,7 +211,7 @@ const Dashboard = () => {
                                                 </div>
                                                 <button
                                                     className="btn btn-primary"
-                                                    onClick={() => handleCreateRoom(quiz._id)}
+                                                    onClick={() => handleCreateRoom(getId(quiz))}
                                                 >
                                                     Create Room
                                                 </button>
@@ -247,22 +256,22 @@ const Dashboard = () => {
                             ) : (
                                 <div className="rooms-grid">
                                     {activeRooms.map((room) => (
-                                        <div key={room._id} className="room-card card">
+                                        <div key={getId(room)} className="room-card card">
                                             <div className="room-header">
                                                 <h4>{room.name}</h4>
                                                 <span className="room-code">{room.roomCode}</span>
                                             </div>
                                             <p className="room-quiz">{room.quiz?.title}</p>
                                             <div className="room-info">
-                                                <span>👥 {room.players.length}/{room.maxPlayers}</span>
+                                                <span>👥 {(room.players?.length || 0)}/{room.maxPlayers}</span>
                                                 <span>Host: {room.host?.username}</span>
                                             </div>
                                             <button
                                                 className="btn btn-secondary btn-block"
                                                 onClick={() => handleJoinRoom(room.roomCode)}
-                                                disabled={room.players.length >= room.maxPlayers}
+                                                disabled={(room.players?.length || 0) >= room.maxPlayers}
                                             >
-                                                {room.players.length >= room.maxPlayers ? 'Full' : 'Join Room'}
+                                                {(room.players?.length || 0) >= room.maxPlayers ? 'Full' : 'Join Room'}
                                             </button>
                                         </div>
                                     ))}
@@ -329,7 +338,7 @@ const Dashboard = () => {
                             ) : (
                                 <div className="quiz-grid">
                                     {myQuizzes.map((quiz) => (
-                                        <div key={quiz._id} className="quiz-card card">
+                                        <div key={getId(quiz)} className="quiz-card card">
                                             <div className="quiz-header">
                                                 <h3>{quiz.title}</h3>
                                                 <span className={`badge badge-${quiz.difficulty.toLowerCase()}`}>
@@ -345,7 +354,7 @@ const Dashboard = () => {
                                             <div className="quiz-actions">
                                                 <button
                                                     className="btn btn-primary"
-                                                    onClick={() => handleCreateRoom(quiz._id)}
+                                                    onClick={() => handleCreateRoom(getId(quiz))}
                                                 >
                                                     Create Room
                                                 </button>
@@ -353,7 +362,7 @@ const Dashboard = () => {
                                                     className="btn btn-outline"
                                                     onClick={async () => {
                                                         if (confirm('Delete this quiz?')) {
-                                                            await quizAPI.deleteQuiz(quiz._id);
+                                                            await quizAPI.deleteQuiz(getId(quiz));
                                                             loadData();
                                                         }
                                                     }}

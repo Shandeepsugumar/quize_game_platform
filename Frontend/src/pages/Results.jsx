@@ -8,6 +8,7 @@ const Results = () => {
     const navigate = useNavigate();
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(true);
+    const getId = (item) => item?._id ?? item?.id;
 
     useEffect(() => {
         loadResults();
@@ -158,7 +159,7 @@ const Results = () => {
                         <h3 className="rankings-title">Other Players</h3>
                         <div className="rankings-list">
                             {results.rankings.slice(3).map((player, index) => (
-                                <div key={player.user._id} className="ranking-row">
+                                <div key={getId(player.user)} className="ranking-row">
                                     <span className="rank-badge">#{index + 4}</span>
                                     <img src={player.user.avatar} alt="" className="rank-avatar" />
                                     <span className="rank-name">{player.user.username}</span>

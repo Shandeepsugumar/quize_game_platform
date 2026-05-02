@@ -77,6 +77,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateProfile = async (profileData) => {
+        try {
+            setError(null);
+            const response = await authAPI.updateProfile(profileData);
+            setUser(response.data.user);
+            return { success: true, user: response.data.user };
+        } catch (err) {
+            const message = err.response?.data?.message || 'Profile update failed';
+            setError(message);
+            return { success: false, error: message };
+        }
+    };
+
     const logout = async () => {
         try {
             await authAPI.logout();
@@ -95,6 +108,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         googleLogin,
+        updateProfile,
         logout,
         isAuthenticated: !!user
     };

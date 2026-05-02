@@ -74,11 +74,12 @@
 }
 
 .info-content code {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     padding: 0.125rem 0.375rem;
     border-radius: var(--radius-sm);
     font-family: 'Courier New', monospace;
     font-size: 0.8rem;
+    color: var(--primary-light);
 }
 
 .template-link {

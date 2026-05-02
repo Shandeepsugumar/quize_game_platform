@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import CreateQuiz from './pages/CreateQuiz';
 import GameRoom from './pages/GameRoom';
 import Results from './pages/Results';
+import ProfilePage from './pages/ProfilePage';
 import './index.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -88,6 +89,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Results />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

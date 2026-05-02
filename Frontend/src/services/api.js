@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://quize-game-platform.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -30,6 +30,7 @@ export const authAPI = {
     login: (data) => api.post('/auth/login', data),
     googleAuth: (data) => api.post('/auth/google', data),
     getCurrentUser: () => api.get('/auth/me'),
+    updateProfile: (data) => api.put('/auth/update-profile', data),
     logout: () => api.post('/auth/logout')
 };
 
