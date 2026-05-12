@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AvatarPicker, { AvatarPickerTrigger } from '../components/AvatarPicker';
 import { getDefaultAvatar } from '../components/avatarData';
+import BrandMark from '../components/BrandMark';
 import './Auth.css';
 
 const Register = () => {
@@ -73,6 +74,9 @@ const Register = () => {
     return (
         <div className="auth-container">
             <div className="auth-card fade-in">
+                <div className="auth-brand">
+                    <BrandMark size="lg" />
+                </div>
                 <div className="auth-header">
                     <h1>Create Account</h1>
                     <p className="text-muted">Join the ultimate quiz platform</p>

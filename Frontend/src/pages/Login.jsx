@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import BrandMark from '../components/BrandMark';
 import './Auth.css';
 
 const Login = () => {
@@ -40,6 +41,9 @@ const Login = () => {
     return (
         <div className="auth-container">
             <div className="auth-card fade-in">
+                <div className="auth-brand">
+                    <BrandMark size="lg" />
+                </div>
                 <div className="auth-header">
                     <h1>Welcome Back!</h1>
                     <p className="text-muted">Login to continue your quiz journey</p>

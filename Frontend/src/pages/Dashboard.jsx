@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { quizAPI, roomAPI, leaderboardAPI } from '../services/api';
+import BrandMark from '../components/BrandMark';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -80,9 +81,7 @@ const Dashboard = () => {
             <header className="dashboard-header">
                 <div className="container">
                     <div className="header-content">
-                        <div className="logo">
-                            <h2>🎯 QuizMaster</h2>
-                        </div>
+                        <BrandMark size="md" showTagline={false} />
                         <div className="user-menu">
                             <div className="user-info">
                                 <img src={user?.avatar} alt={user?.username} className="user-avatar" />

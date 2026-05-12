@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { leaderboardAPI, quizAPI } from '../services/api';
 import AvatarPicker, { AvatarPickerTrigger } from '../components/AvatarPicker';
 import { findAvatarByUrl, getDefaultAvatar } from '../components/avatarData';
+import BrandMark from '../components/BrandMark';
 import './Profile.css';
 
 const ProfilePage = () => {
@@ -151,6 +152,7 @@ const ProfilePage = () => {
             <main className="profile-shell">
                 <section className="profile-hero card-shell">
                     <div className="profile-hero-copy">
+                        <BrandMark size="sm" showTagline={false} />
                         <p className="profile-eyebrow">Your account</p>
                         <h1>Profile center</h1>
                         <p className="profile-intro">

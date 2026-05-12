@@ -56,6 +56,305 @@
   --transition-slow: 350ms ease-in-out;
 }
 
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATED BACKGROUND — Pure CSS Design
+   ═══════════════════════════════════════════════ */
+.animated-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Aurora gradient blobs ── */
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.aurora-blob--1 {
+  width: 600px;
+  height: 600px;
+  top: -15%;
+  left: -10%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0) 70%);
+  animation: auroraFloat1 20s ease-in-out infinite;
+}
+
+.aurora-blob--2 {
+  width: 500px;
+  height: 500px;
+  top: 50%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, rgba(236, 72, 153, 0) 70%);
+  animation: auroraFloat2 25s ease-in-out infinite;
+}
+
+.aurora-blob--3 {
+  width: 450px;
+  height: 450px;
+  bottom: -10%;
+  left: 25%;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.25) 0%, rgba(45, 212, 191, 0) 70%);
+  animation: auroraFloat3 22s ease-in-out infinite;
+}
+
+.aurora-blob--4 {
+  width: 350px;
+  height: 350px;
+  top: 30%;
+  left: 50%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, rgba(167, 139, 250, 0) 70%);
+  animation: auroraFloat4 18s ease-in-out infinite;
+}
+
+/* ── Flowing wave layers ── */
+.wave-layer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 220px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(129,140,248,0.04)' d='M0,224L48,213.3C96,203,192,181,288,186.7C384,192,480,224,576,229.3C672,235,768,213,864,186.7C960,160,1056,128,1152,128C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'/%3E%3C/svg%3E") repeat-x;
+  background-size: 50% 100%;
+  animation: waveScroll 30s linear infinite;
+  opacity: 0.8;
+}
+
+.wave-layer--2 {
+  height: 180px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(244,114,182,0.03)' d='M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,149.3C672,139,768,149,864,170.7C960,192,1056,224,1152,218.7C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'/%3E%3C/svg%3E") repeat-x;
+  background-size: 50% 100%;
+  animation: waveScroll 40s linear infinite reverse;
+  opacity: 0.6;
+}
+
+/* ── Subtle dot grid ── */
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridFade 12s ease-in-out infinite;
+}
+
+/* ── Aurora keyframes ── */
+@keyframes auroraFloat1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(80px, 40px) scale(1.1);
+  }
+  50% {
+    transform: translate(40px, 80px) scale(0.95);
+  }
+  75% {
+    transform: translate(-30px, 50px) scale(1.05);
+  }
+}
+
+@keyframes auroraFloat2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(-60px, -50px) scale(1.08);
+  }
+  50% {
+    transform: translate(-100px, 20px) scale(0.92);
+  }
+  75% {
+    transform: translate(-40px, -30px) scale(1.04);
+  }
+}
+
+@keyframes auroraFloat3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(70px, -40px) scale(1.12);
+  }
+  66% {
+    transform: translate(-50px, -70px) scale(0.9);
+  }
+}
+
+@keyframes auroraFloat4 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-60px, 50px) scale(1.15);
+    opacity: 0.3;
+  }
+}
+
+@keyframes waveScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes gridFade {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+
+/* ═══════════════════════════════════════════════
+   BRAND MARK — Logo & Name
+   ═══════════════════════════════════════════════ */
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark__icon {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, rgba(129, 140, 248, 0.3), rgba(244, 114, 182, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 10px 30px rgba(129, 140, 248, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  overflow: visible;
+}
+
+.brand-mark__svg {
+  width: 38px;
+  height: 38px;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-mark__bolt {
+  animation: boltPulse 2.5s ease-in-out infinite;
+}
+
+.brand-mark__pulse-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 22px;
+  border: 2px solid rgba(129, 140, 248, 0.35);
+  animation: brandRingPulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.brand-mark__copy {
+  display: grid;
+  gap: 3px;
+}
+
+.brand-mark__name {
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  display: flex;
+  gap: 0;
+}
+
+.brand-mark__name-brain {
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-mark__name-burst {
+  background: linear-gradient(135deg, #f472b6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-mark__tagline {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Size variants ── */
+.brand-mark--sm .brand-mark__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+
+.brand-mark--sm .brand-mark__svg {
+  width: 30px;
+  height: 30px;
+}
+
+.brand-mark--sm .brand-mark__pulse-ring {
+  inset: -4px;
+  border-radius: 18px;
+}
+
+.brand-mark--sm .brand-mark__name {
+  font-size: 1.05rem;
+}
+
+.brand-mark--sm .brand-mark__tagline {
+  font-size: 0.7rem;
+}
+
+.brand-mark--lg .brand-mark__icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+}
+
+.brand-mark--lg .brand-mark__svg {
+  width: 46px;
+  height: 46px;
+}
+
+.brand-mark--lg .brand-mark__pulse-ring {
+  inset: -8px;
+  border-radius: 26px;
+}
+
+.brand-mark--lg .brand-mark__name {
+  font-size: 1.55rem;
+}
+
+.brand-mark--lg .brand-mark__tagline {
+  font-size: 0.88rem;
+}
+
+@keyframes boltPulse {
+  0%, 100% { opacity: 0.85; filter: brightness(1); }
+  50%      { opacity: 1;    filter: brightness(1.4); }
+}
+
+@keyframes brandRingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -74,7 +373,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Animated Background */
+/* Animated Background shimmer on body */
 body::before {
   content: '';
   position: fixed;
@@ -83,9 +382,9 @@ body::before {
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(45, 212, 191, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 20%, rgba(45, 212, 191, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
   animation: backgroundPulse 15s ease-in-out infinite;
@@ -99,6 +398,12 @@ body::before {
 #root {
   position: relative;
   z-index: 1;
+}
+
+.auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
 }
 
 /* Scrollbar Styling */

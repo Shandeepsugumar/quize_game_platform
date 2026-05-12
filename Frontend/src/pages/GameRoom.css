@@ -232,6 +232,7 @@
 .option-text {
     flex: 1;
     font-size: 1.125rem;
+    color: var(--text-primary);
 }
 
 .result-container {
