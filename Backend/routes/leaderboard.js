@@ -2,11 +2,22 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const GameResult = require('../models/GameResult');
+const NodeCache = require('node-cache');
+
+const cache = new NodeCache({ stdTTL: 60 }); // 60 second cache
 
 // Get Global Leaderboard
 router.get('/global', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
+        const cacheKey = `leaderboard_global_${limit}`;
+
+        // Check cache first
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log('📦 Global leaderboard served from cache');
+            return res.json(cached);
+        }
 
         const leaderboard = await User.find()
             .select('username avatar totalScore gamesPlayed gamesWon')
@@ -23,10 +34,15 @@ router.get('/global', async (req, res) => {
             totalScore: user.totalScore,
             gamesPlayed: user.gamesPlayed,
             gamesWon: user.gamesWon,
-            winRate: user.gamesPlayed > 0 ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(1) : 0
+            winRate: user.gamesPlayed > 0
+                ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(1)
+                : 0
         }));
 
-        res.json({ leaderboard: formattedLeaderboard });
+        const result = { leaderboard: formattedLeaderboard };
+        cache.set(cacheKey, result); // store in cache
+        res.json(result);
+
     } catch (error) {
         console.error('Get leaderboard error:', error);
         res.status(500).json({ message: 'Server error fetching leaderboard' });
@@ -37,6 +53,14 @@ router.get('/global', async (req, res) => {
 router.get('/recent', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
+        const cacheKey = `leaderboard_recent_${limit}`;
+
+        // Check cache first
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log('📦 Recent games served from cache');
+            return res.json(cached);
+        }
 
         const recentGames = await GameResult.find()
             .populate('quiz', 'title category difficulty')
@@ -45,7 +69,10 @@ router.get('/recent', async (req, res) => {
             .sort({ playedAt: -1 })
             .limit(limit);
 
-        res.json({ recentGames });
+        const result = { recentGames };
+        cache.set(cacheKey, result); // store in cache
+        res.json(result);
+
     } catch (error) {
         console.error('Get recent games error:', error);
         res.status(500).json({ message: 'Server error fetching recent games' });
@@ -55,6 +82,15 @@ router.get('/recent', async (req, res) => {
 // Get User Stats
 router.get('/user/:userId', async (req, res) => {
     try {
+        const cacheKey = `leaderboard_user_${req.params.userId}`;
+
+        // Check cache first
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log(`📦 User stats for ${req.params.userId} served from cache`);
+            return res.json(cached);
+        }
+
         const user = await User.findById(req.params.userId)
             .select('username avatar totalScore gamesPlayed gamesWon');
 
@@ -62,11 +98,11 @@ router.get('/user/:userId', async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Get user's rank
-        const higherScoreCount = await User.countDocuments({ totalScore: { $gt: user.totalScore } });
+        const higherScoreCount = await User.countDocuments({
+            totalScore: { $gt: user.totalScore }
+        });
         const rank = higherScoreCount + 1;
 
-        // Get user's recent games
         const recentGames = await GameResult.find({ 'rankings.user': user._id })
             .populate('quiz', 'title category')
             .sort({ playedAt: -1 })
@@ -82,15 +118,30 @@ router.get('/user/:userId', async (req, res) => {
             totalScore: user.totalScore,
             gamesPlayed: user.gamesPlayed,
             gamesWon: user.gamesWon,
-            winRate: user.gamesPlayed > 0 ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(1) : 0,
+            winRate: user.gamesPlayed > 0
+                ? ((user.gamesWon / user.gamesPlayed) * 100).toFixed(1)
+                : 0,
             recentGames
         };
 
-        res.json({ stats });
+        const result = { stats };
+        cache.set(cacheKey, result); // store in cache
+        res.json(result);
+
     } catch (error) {
         console.error('Get user stats error:', error);
         res.status(500).json({ message: 'Server error fetching user stats' });
     }
 });
+
+// ✅ Helper — call this from game.js after a game ends to clear stale cache
+router.clearLeaderboardCache = (userId) => {
+    cache.del(`leaderboard_global_10`);
+    cache.del(`leaderboard_global_20`);
+    cache.del(`leaderboard_recent_10`);
+    cache.del(`leaderboard_recent_20`);
+    if (userId) cache.del(`leaderboard_user_${userId}`);
+    console.log('🗑️ Leaderboard cache cleared');
+};
 
 module.exports = router;

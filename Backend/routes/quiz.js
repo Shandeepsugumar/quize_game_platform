@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Quiz = require('../models/Quiz');
 const authMiddleware = require('../middleware/auth');
+const NodeCache = require('node-cache');
+
+const cache = new NodeCache({ stdTTL: 60 }); // 60 second cache
 
 // Create Quiz
 router.post('/create', authMiddleware, async (req, res) => {
@@ -31,6 +34,10 @@ router.post('/create', authMiddleware, async (req, res) => {
 
         await quiz.save();
 
+        // ✅ Clear all quizzes list cache so new quiz appears immediately
+        cache.del('quizzes_all');
+        cache.del(`quizzes_my_${req.user._id}`);
+
         res.status(201).json({
             message: 'Quiz created successfully',
             quiz
@@ -45,6 +52,15 @@ router.post('/create', authMiddleware, async (req, res) => {
 router.get('/all', async (req, res) => {
     try {
         const { category, difficulty, search } = req.query;
+
+        // ✅ Build cache key from query params so filtered results are cached separately
+        const cacheKey = `quizzes_all_${category || 'all'}_${difficulty || 'all'}_${search || ''}`;
+
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log('📦 All quizzes served from cache');
+            return res.json(cached);
+        }
 
         let filter = { isPublic: true };
 
@@ -67,7 +83,10 @@ router.get('/all', async (req, res) => {
             .populate('createdBy', 'username avatar')
             .sort({ createdAt: -1 });
 
-        res.json({ quizzes });
+        const result = { quizzes };
+        cache.set(cacheKey, result);
+        res.json(result);
+
     } catch (error) {
         console.error('Get quizzes error:', error);
         res.status(500).json({ message: 'Server error fetching quizzes' });
@@ -77,6 +96,14 @@ router.get('/all', async (req, res) => {
 // Get Quiz by ID
 router.get('/:id', async (req, res) => {
     try {
+        const cacheKey = `quiz_${req.params.id}`;
+
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log(`📦 Quiz ${req.params.id} served from cache`);
+            return res.json(cached);
+        }
+
         const quiz = await Quiz.findById(req.params.id)
             .populate('createdBy', 'username avatar');
 
@@ -84,7 +111,10 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ message: 'Quiz not found' });
         }
 
-        res.json({ quiz });
+        const result = { quiz };
+        cache.set(cacheKey, result);
+        res.json(result);
+
     } catch (error) {
         console.error('Get quiz error:', error);
         res.status(500).json({ message: 'Server error fetching quiz' });
@@ -94,10 +124,21 @@ router.get('/:id', async (req, res) => {
 // Get My Quizzes
 router.get('/my/quizzes', authMiddleware, async (req, res) => {
     try {
+        const cacheKey = `quizzes_my_${req.user._id}`;
+
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            console.log(`📦 My quizzes for user ${req.user._id} served from cache`);
+            return res.json(cached);
+        }
+
         const quizzes = await Quiz.find({ createdBy: req.user._id })
             .sort({ createdAt: -1 });
 
-        res.json({ quizzes });
+        const result = { quizzes };
+        cache.set(cacheKey, result);
+        res.json(result);
+
     } catch (error) {
         console.error('Get my quizzes error:', error);
         res.status(500).json({ message: 'Server error fetching quizzes' });
@@ -118,6 +159,11 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         }
 
         await quiz.deleteOne();
+
+        // ✅ Clear all related caches after deletion
+        cache.del(`quiz_${req.params.id}`);
+        cache.del(`quizzes_my_${req.user._id}`);
+        cache.flushAll(); // clear all filtered quiz lists too
 
         res.json({ message: 'Quiz deleted successfully' });
     } catch (error) {
