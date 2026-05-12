@@ -4,7 +4,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const rateLimit = require('express-rate-limit');
 
 dotenv.config();
@@ -27,12 +26,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// 4. Session with persistent store
+// 4. Session
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'quiz-game-secret-key-2024',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGO_URL }),
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
