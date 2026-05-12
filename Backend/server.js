@@ -5,8 +5,13 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const NodeCache = require('node-cache');  
 
 dotenv.config();
+
+const cache = new NodeCache({ stdTTL: 60 });
+module.exports.cache = cache; 
 
 const app = express();
 
@@ -15,6 +20,7 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || 'https://quize-game-platform-eg2y.vercel.app',
     credentials: true
 }));
+app.use(compression()); 
 
 // 2. Body parsers FIRST
 app.use(express.json());
