@@ -45,9 +45,25 @@ app.use(session({
 }));
 
 // 5. MongoDB connection
-mongoose.connect(process.env.MONGO_URL)
+const MONGO_URL = process.env.MONGO_URL;
+console.log('🔌 Attempting MongoDB connection...');
+console.log('🔌 MONGO_URL exists:', !!MONGO_URL);
+console.log('🔌 MONGO_URL prefix:', MONGO_URL ? MONGO_URL.substring(0, 30) + '...' : 'NOT SET');
+
+mongoose.connect(MONGO_URL, {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+})
     .then(() => console.log('✅ MongoDB Connected Successfully'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+    .catch(err => {
+        console.error('❌ MongoDB Connection Error:', err.message);
+        console.error('❌ Full error:', err);
+    });
+
+// MongoDB connection event listeners
+mongoose.connection.on('connected', () => console.log('🟢 Mongoose connected to MongoDB'));
+mongoose.connection.on('error', (err) => console.error('🔴 Mongoose connection error:', err.message));
+mongoose.connection.on('disconnected', () => console.log('🟠 Mongoose disconnected from MongoDB'));
 
 // 6. Rate limiter BEFORE routes
 const limiter = rateLimit({
@@ -72,7 +88,15 @@ app.use('/api/leaderboard', leaderboardRoutes);
 
 // 8. Health check
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Quiz Game Server is running!', timestamp: new Date() });
+    const dbState = mongoose.connection.readyState;
+    const dbStateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+    res.json({
+        status: 'OK',
+        message: 'Quiz Game Server is running!',
+        database: dbStateMap[dbState] || 'unknown',
+        dbState,
+        timestamp: new Date()
+    });
 });
 
 // 9. Global error handler — always last

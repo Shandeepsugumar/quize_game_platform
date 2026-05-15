@@ -72,24 +72,28 @@ router.get('/all', async (req, res) => {
             filter.difficulty = difficulty;
         }
 
-        if (search) {
+        if (search && search.trim() !== '') {
             filter.$or = [
                 { title: { $regex: search, $options: 'i' } },
                 { description: { $regex: search, $options: 'i' } }
             ];
         }
 
+        console.log('🔍 Quiz filter:', JSON.stringify(filter));
+
         const quizzes = await Quiz.find(filter)
             .populate('createdBy', 'username avatar')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        const result = { quizzes };
+        const result = { quizzes: quizzes || [] };
         cache.set(cacheKey, result);
         res.json(result);
 
     } catch (error) {
-        console.error('Get quizzes error:', error);
-        res.status(500).json({ message: 'Server error fetching quizzes' });
+        console.error('❌ Get quizzes error:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        res.status(500).json({ message: 'Server error fetching quizzes', error: error.message });
     }
 });
 
