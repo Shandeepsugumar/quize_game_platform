@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { quizAPI, roomAPI } from '../services/api';
+import { quizAPI, roomAPI, aiAPI } from '../services/api';
+import DOMPurify from 'dompurify';
 import './AIAgent.css';
-
-const API_KEY = import.meta.env.VITE_AI_AGENT;
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // System prompts for different modes
 const CHAT_SYSTEM_PROMPT = `You are BrainBurst AI — a friendly, knowledgeable quiz assistant embedded in the BrainBurst quiz platform. You can:
@@ -82,36 +80,28 @@ const AIAgent = ({ currentQuizTopic, currentQuestion }) => {
         setInputValue(ta.value);
     }, []);
 
-    // Call Groq API (Llama 3.3 70B)
-    const callGroqAPI = async (userMessage, systemPrompt) => {
-        if (!API_KEY) {
-            throw new Error('AI Agent API key not configured. Please set VITE_AI_AGENT in your .env file.');
-        }
+    // Call AI via backend proxy (API key stays server-side)
+    const callAI = async (userMessage, systemPrompt) => {
+        const response = await aiAPI.chat([
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage }
+        ]);
 
-        const response = await fetch(GROQ_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
-                max_tokens: 2048,
-                temperature: 0.7,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userMessage }
-                ]
-            })
+        return response.data?.content || 'No response generated.';
+    };
+
+    // Sanitize and format message content for safe rendering
+    const formatMessage = (content) => {
+        const formatted = content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/`(.*?)`/g, '<code>$1</code>')
+            .replace(/\n/g, '<br/>');
+        
+        // Sanitize HTML to prevent XSS
+        return DOMPurify.sanitize(formatted, {
+            ALLOWED_TAGS: ['strong', 'code', 'br', 'em', 'ul', 'ol', 'li', 'p'],
+            ALLOWED_ATTR: []
         });
-
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            throw new Error(errData?.error?.message || `API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.choices?.[0]?.message?.content || 'No response generated.';
     };
 
     // ═══════════════════════════════════════════════
@@ -142,7 +132,7 @@ Each question should have 4 options with one correct answer.
 Set timeLimit to ${setupConfig.timePerQuestion} for each question.
 Return ONLY a valid JSON array.`;
 
-            const reply = await callGroqAPI(prompt, SETUP_SYSTEM_PROMPT);
+            const reply = await callAI(prompt, SETUP_SYSTEM_PROMPT);
 
             // Parse JSON
             let cleanedReply = reply.trim();
@@ -254,7 +244,7 @@ Return ONLY a valid JSON array.`;
                 contextMsg += `\n\n[Context: Current quiz topic is "${currentQuizTopic}"]`;
             }
 
-            const reply = await callGroqAPI(contextMsg, CHAT_SYSTEM_PROMPT);
+            const reply = await callAI(contextMsg, CHAT_SYSTEM_PROMPT);
 
             setMessages(prev => [...prev, {
                 role: 'assistant',
@@ -262,7 +252,7 @@ Return ONLY a valid JSON array.`;
                 timestamp: new Date()
             }]);
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.message || err.message || 'Failed to get AI response');
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: '⚠️ Sorry, I encountered an error. Please try again.',
@@ -404,10 +394,7 @@ Return ONLY a valid JSON array.`;
                                     <div>
                                         <div className="msg-bubble"
                                             dangerouslySetInnerHTML={{
-                                                __html: msg.content
-                                                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                                    .replace(/`(.*?)`/g, '<code>$1</code>')
-                                                    .replace(/\n/g, '<br/>')
+                                                __html: formatMessage(msg.content)
                                             }}
                                         />
                                         <div className="msg-time">{formatTime(msg.timestamp)}</div>

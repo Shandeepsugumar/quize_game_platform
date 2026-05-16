@@ -43,12 +43,7 @@ router.post('/create', authMiddleware, async (req, res) => {
             room
         });
     } catch (error) {
-        console.error('Create room error:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
-        });
+        console.error('Create room error:', error.message);
 
         // Handle validation errors specifically
         if (error.name === 'ValidationError') {
@@ -60,8 +55,7 @@ router.post('/create', authMiddleware, async (req, res) => {
         }
 
         res.status(500).json({
-            message: 'Server error creating room',
-            error: error.message
+            message: 'Server error creating room'
         });
     }
 });

@@ -204,11 +204,9 @@ router.get('/results/:roomCode', authMiddleware, async (req, res) => {
             rankings
         });
     } catch (error) {
-        console.error('❌ Get results error:', error);
-        console.error('Error stack:', error.stack);
+        console.error('❌ Get results error:', error.message);
         res.status(500).json({
-            message: 'Server error fetching results',
-            error: error.message
+            message: 'Server error fetching results'
         });
     }
 });

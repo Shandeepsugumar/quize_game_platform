@@ -6,6 +6,9 @@ const NodeCache = require('node-cache');
 
 const cache = new NodeCache({ stdTTL: 60 }); // 60 second cache
 
+// Escape regex special characters to prevent ReDoS / NoSQL injection
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Create Quiz
 router.post('/create', authMiddleware, async (req, res) => {
     try {
@@ -43,7 +46,7 @@ router.post('/create', authMiddleware, async (req, res) => {
             quiz
         });
     } catch (error) {
-        console.error('Create quiz error:', error);
+        console.error('Create quiz error:', error.message);
         res.status(500).json({ message: 'Server error creating quiz' });
     }
 });
@@ -58,7 +61,6 @@ router.get('/all', async (req, res) => {
 
         const cached = cache.get(cacheKey);
         if (cached) {
-            console.log('📦 All quizzes served from cache');
             return res.json(cached);
         }
 
@@ -73,13 +75,13 @@ router.get('/all', async (req, res) => {
         }
 
         if (search && search.trim() !== '') {
+            // ✅ Escape regex special chars to prevent NoSQL injection / ReDoS
+            const sanitizedSearch = escapeRegex(search.trim());
             filter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                { title: { $regex: sanitizedSearch, $options: 'i' } },
+                { description: { $regex: sanitizedSearch, $options: 'i' } }
             ];
         }
-
-        console.log('🔍 Quiz filter:', JSON.stringify(filter));
 
         const quizzes = await Quiz.find(filter)
             .populate('createdBy', 'username avatar')
@@ -92,8 +94,7 @@ router.get('/all', async (req, res) => {
 
     } catch (error) {
         console.error('❌ Get quizzes error:', error.message);
-        console.error('❌ Error stack:', error.stack);
-        res.status(500).json({ message: 'Server error fetching quizzes', error: error.message });
+        res.status(500).json({ message: 'Server error fetching quizzes' });
     }
 });
 
@@ -104,7 +105,6 @@ router.get('/:id', async (req, res) => {
 
         const cached = cache.get(cacheKey);
         if (cached) {
-            console.log(`📦 Quiz ${req.params.id} served from cache`);
             return res.json(cached);
         }
 
@@ -120,7 +120,7 @@ router.get('/:id', async (req, res) => {
         res.json(result);
 
     } catch (error) {
-        console.error('Get quiz error:', error);
+        console.error('Get quiz error:', error.message);
         res.status(500).json({ message: 'Server error fetching quiz' });
     }
 });
@@ -132,7 +132,6 @@ router.get('/my/quizzes', authMiddleware, async (req, res) => {
 
         const cached = cache.get(cacheKey);
         if (cached) {
-            console.log(`📦 My quizzes for user ${req.user._id} served from cache`);
             return res.json(cached);
         }
 
@@ -144,7 +143,7 @@ router.get('/my/quizzes', authMiddleware, async (req, res) => {
         res.json(result);
 
     } catch (error) {
-        console.error('Get my quizzes error:', error);
+        console.error('Get my quizzes error:', error.message);
         res.status(500).json({ message: 'Server error fetching quizzes' });
     }
 });
@@ -171,7 +170,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
         res.json({ message: 'Quiz deleted successfully' });
     } catch (error) {
-        console.error('Delete quiz error:', error);
+        console.error('Delete quiz error:', error.message);
         res.status(500).json({ message: 'Server error deleting quiz' });
     }
 });

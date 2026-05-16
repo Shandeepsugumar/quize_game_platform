@@ -6,49 +6,67 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
-const NodeCache = require('node-cache');  
+const helmet = require('helmet');
+const NodeCache = require('node-cache');
 
 dotenv.config();
 
+// ── Validate required environment variables ──
+const REQUIRED_ENV = ['MONGO_URL', 'JWT_SECRET', 'SESSION_SECRET'];
+for (const key of REQUIRED_ENV) {
+    if (!process.env[key]) {
+        console.error(`❌ FATAL: Missing required environment variable: ${key}`);
+        process.exit(1);
+    }
+}
+
 const cache = new NodeCache({ stdTTL: 60 });
-module.exports.cache = cache; 
+module.exports.cache = cache;
 
 const app = express();
 
-// 1. CORS
+// 1. Security headers
+app.use(helmet());
+
+// 2. CORS
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'https://quize-game-platform-eg2y.vercel.app',
     credentials: true
 }));
-app.use(compression()); 
+app.use(compression());
 
-// 2. Body parsers FIRST
-app.use(express.json());
+// 3. Body parsers with size limit to prevent payload DoS
+app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
-// 3. Request logger AFTER body is parsed
+// 4. Request logger (sanitized — never log passwords or sensitive data)
 app.use((req, res, next) => {
-    console.log(`📨 ${req.method} ${req.path}`, req.body ? JSON.stringify(req.body) : '');
+    const sanitizedBody = req.body ? { ...req.body } : {};
+    // Remove sensitive fields from logs
+    delete sanitizedBody.password;
+    delete sanitizedBody.token;
+    delete sanitizedBody.googleId;
+    console.log(`📨 ${req.method} ${req.path}`, Object.keys(sanitizedBody).length > 0 ? JSON.stringify(sanitizedBody) : '');
     next();
 });
 
-// 4. Session
+// 5. Session
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'quiz-game-secret-key-2024',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
 
-// 5. MongoDB connection
+// 6. MongoDB connection
 const MONGO_URL = process.env.MONGO_URL;
 console.log('🔌 Attempting MongoDB connection...');
 console.log('🔌 MONGO_URL exists:', !!MONGO_URL);
-console.log('🔌 MONGO_URL prefix:', MONGO_URL ? MONGO_URL.substring(0, 30) + '...' : 'NOT SET');
 
 mongoose.connect(MONGO_URL, {
     serverSelectionTimeoutMS: 10000,
@@ -57,7 +75,6 @@ mongoose.connect(MONGO_URL, {
     .then(() => console.log('✅ MongoDB Connected Successfully'))
     .catch(err => {
         console.error('❌ MongoDB Connection Error:', err.message);
-        console.error('❌ Full error:', err);
     });
 
 // MongoDB connection event listeners
@@ -65,7 +82,7 @@ mongoose.connection.on('connected', () => console.log('🟢 Mongoose connected t
 mongoose.connection.on('error', (err) => console.error('🔴 Mongoose connection error:', err.message));
 mongoose.connection.on('disconnected', () => console.log('🟠 Mongoose disconnected from MongoDB'));
 
-// 6. Rate limiter BEFORE routes
+// 7. Rate limiter BEFORE routes
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -73,20 +90,22 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// 7. Routes
+// 8. Routes
 const authRoutes = require('./routes/auth');
 const quizRoutes = require('./routes/quiz');
 const roomRoutes = require('./routes/room');
 const gameRoutes = require('./routes/game');
 const leaderboardRoutes = require('./routes/leaderboard');
+const aiRoutes = require('./routes/ai');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/room', roomRoutes);
 app.use('/api/game', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/ai', aiRoutes);
 
-// 8. Health check
+// 9. Health check
 app.get('/api/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
     const dbStateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
@@ -99,13 +118,13 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// 9. Global error handler — always last
+// 10. Global error handler — always last
 app.use((err, req, res, next) => {
     console.error('❌ Global Error Handler:', err.message);
+    const isDev = process.env.NODE_ENV === 'development';
     res.status(500).json({
         message: 'Internal Server Error',
-        error: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        ...(isDev && { error: err.message, stack: err.stack })
     });
 });
 

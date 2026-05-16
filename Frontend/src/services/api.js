@@ -67,4 +67,13 @@ export const leaderboardAPI = {
     getUserStats: (userId) => api.get(`/leaderboard/user/${userId}`)
 };
 
+// AI API (proxied through backend — API key stays server-side)
+export const aiAPI = {
+    chat: (messages, options = {}) => api.post('/ai/chat', {
+        messages,
+        max_tokens: options.max_tokens || 2048,
+        temperature: options.temperature || 0.7
+    })
+};
+
 export default api;
