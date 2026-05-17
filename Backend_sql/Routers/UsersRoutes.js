@@ -16,7 +16,7 @@ const generateToken = (userId) => jwt.sign({ userId }, JWT_SECRET, { expiresIn: 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/google", googleAuth);
-router.get("/me", middleware);
+router.get("/me", authMiddleware, middleware);
 router.put("/update-profile", authMiddleware, updateUser);
 router.post("/logout", logoutUser);
 
