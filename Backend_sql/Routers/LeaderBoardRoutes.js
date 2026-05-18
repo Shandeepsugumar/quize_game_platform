@@ -1,6 +1,6 @@
 const express = require("express");
 const { client } = require("../db");
-const { getGlobalLeaderboard, getRecentLeaderboard, getUserLeaderboard } = require("../Controllers/LeaderboardController");
+const { getGlobalLeaderboard, getRecentLeaderboard, getUserLeaderboard } = require("../Controllers/LeaderBoardController");
 
 const router = express.Router();
 
